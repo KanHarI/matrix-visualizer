@@ -1,1 +1,3 @@
-exports.error = msg => throw new Error(msg);
+export function error(msg) {
+    throw new Error(msg)
+};

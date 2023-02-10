@@ -12,13 +12,18 @@ to generate this file without the comments in this block.
 -}
 { name = "my-project"
 , dependencies =
-  [ "console"
+  [ "arrays"
+  , "assert"
+  , "console"
   , "effect"
   , "foldable-traversable"
   , "integers"
+  , "lists"
   , "maybe"
   , "numbers"
   , "prelude"
+  , "profunctor"
+  , "quickcheck"
   , "tuples"
   , "unordered-collections"
   ]
