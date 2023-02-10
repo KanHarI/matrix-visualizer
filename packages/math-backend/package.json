@@ -1,0 +1,15 @@
+{
+  "name": "@matrix-visualizer/math-backend",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "build": "spago build",
+    "test": "spago test",
+    "lint": "purty format --write src"
+  },
+  "devDependencies": {
+    "purescript": "^0.15.7",
+    "purty": "^7.0.0",
+    "spago": "^0.20.9"
+  }
+}
