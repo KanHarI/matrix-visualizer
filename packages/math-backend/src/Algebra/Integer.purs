@@ -1,9 +1,10 @@
 module Algebra.Integer where
 
 import Prelude
-import Algebra.CommutativeRing (class CommutativeRing)
+import Algebra.MaybeInvertibleCommutativeRing (class MaybeInvertibleCommutativeRing)
+import Algebra.MaybeInvertibleRing (class MaybeInvertibleRing)
 import Algebra.UniqueFactorizationDomain (class UniqueFactorizationDomain)
-import Data.HashMap (fromArray, toArrayBy)
+import Data.HashMap (fromFoldable, singleton, toArrayBy)
 import Data.Hashable (class Hashable, hash)
 import Data.Int (fromNumber, toNumber)
 import Data.Maybe (Maybe(..))
@@ -22,24 +23,35 @@ instance integerEq :: Eq Integer where
 instance integerHashable :: Hashable Integer where
   hash (Integer a) = hash a
 
-instance integerCommutativeRing :: CommutativeRing Integer where
-  _Aadd (Integer a) (Integer b) = Integer (a + b)
-  _Amul (Integer a) (Integer b) = Integer (a * b)
-  _Aone = Integer 1
-  _Azero = Integer 0
-  _Aneg (Integer a) = Integer (negate a)
-  _Ainv (Integer a) = if a == 1 || a == -1 then Just (Integer a) else Nothing
-  _AtoMathJax (Integer a) = toString $ toNumber a
+instance integerSemiring :: Semiring Integer where
+  zero = Integer 0
+  one = Integer 1
+  add (Integer a) (Integer b) = Integer (a + b)
+  mul (Integer a) (Integer b) = Integer (a * b)
+
+instance integereRing :: Ring Integer where
+  sub (Integer a) (Integer b) = Integer (a - b)
+
+instance integerCommutativeRing :: CommutativeRing Integer
+
+instance integersMaybeInvertibleRing :: MaybeInvertibleRing Integer where
+  inv (Integer (-1)) = Just (Integer (-1))
+  inv (Integer 1) = Just one
+  inv _ = Nothing
+  toMathJax (Integer n) = toString $ toNumber n
+
+instance integerMaybeInvetibleCommutativeRing :: MaybeInvertibleCommutativeRing Integer
 
 instance integerUniqueFactorizationDomain :: UniqueFactorizationDomain Integer where
-  factorize (Integer a) =
+  factorize (Integer 0) = Tuple Nothing (singleton zero 1)
+  factorize (Integer n) =
     let
-      abs_a = case fromNumber (abs $ toNumber a) of
-        Just b -> b
-        Nothing -> error "Integer.factorize: got a fraction"
+      abs_n = case fromNumber $ abs $ toNumber n of
+        Just x -> x
+        Nothing -> error "factorize: Integer out of range"
 
-      _unit = if a == -1 then Just (Integer (-1)) else Nothing
+      factors = primeFactorsWithMultiplicity abs_n
 
-      abs_factorization = primeFactorsWithMultiplicity abs_a
+      unit = if n < 0 then Just (Integer (-1)) else Nothing
     in
-      Tuple _unit (fromArray (toArrayBy (\k -> \v -> Tuple (Integer k) v) abs_factorization))
+      Tuple unit (fromFoldable $ toArrayBy (\k v -> Tuple (Integer k) v) factors)

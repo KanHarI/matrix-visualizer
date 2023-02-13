@@ -1,28 +1,30 @@
 module Algebra.UniqueFactorizationDomain where
 
 import Prelude
-import Algebra.CommutativeRing (class CommutativeRing, _Ainv, _Amul, _Aone, _Apow)
+import Algebra.MaybeInvertibleCommutativeRing (class MaybeInvertibleCommutativeRing)
+import Algebra.MaybeInvertibleRing (inv, pow)
 import Data.Foldable (foldl)
-import Data.HashMap (HashMap, empty, filter, intersectionWith, toArrayBy, unionWith)
+import Data.HashMap (HashMap, filter, intersectionWith, toArrayBy, unionWith)
+import Data.Hashable (class Hashable)
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..), fst, snd)
 import Error (error)
 
 class
-  CommutativeRing a <= UniqueFactorizationDomain a where
+  (MaybeInvertibleCommutativeRing a, Hashable a) <= UniqueFactorizationDomain a where
   factorize :: a -> Tuple (Maybe a) (HashMap a Int)
 
 defactorize :: forall a. UniqueFactorizationDomain a => Tuple (Maybe a) (HashMap a Int) -> a
 defactorize (Tuple maybe_unit non_units) =
   let
     unital_element = case maybe_unit of
-      Nothing -> _Aone
+      Nothing -> one
       Just x -> x
 
     non_unit_factors :: HashMap a Int
     non_unit_factors = non_units
   in
-    foldl _Amul unital_element (toArrayBy (\factor -> \exponent -> _Apow factor exponent) non_unit_factors)
+    foldl (*) unital_element (toArrayBy (\factor -> \exponent -> pow factor exponent) non_unit_factors)
 
 gcd :: forall a. UniqueFactorizationDomain a => a -> a -> a
 gcd a b = defactorize (gcd' (factorize a) (factorize b))
@@ -72,18 +74,17 @@ reduceFraction fraction =
     denominator_non_unit = snd denominator_factors
 
     denominator_unit_inverse = case denominator_unit of
-      Just x -> case _Ainv x of
+      Just x -> case inv x of
         Just y -> y
         Nothing -> error "reduceFraction: denominator_unit is not invertible"
-      Nothing -> _Aone
+      Nothing -> one
 
     unit =
-      _Amul
-        ( case numerator_unit of
-            Nothing -> _Aone
-            Just y -> y
-        )
-        denominator_unit_inverse
+      ( case numerator_unit of
+          Nothing -> one
+          Just y -> y
+      )
+        * denominator_unit_inverse
 
     non_unit_part = unionWith (+) numerator_non_unit (map negate denominator_non_unit)
 
@@ -91,7 +92,7 @@ reduceFraction fraction =
 
     non_unit_denominator = filter (\x -> x < 0) non_unit_part
 
-    new_numerator = _Amul unit (defactorize (Tuple Nothing non_unit_numerator))
+    new_numerator = unit * (defactorize (Tuple Nothing non_unit_numerator))
 
     new_denominator = defactorize (Tuple Nothing non_unit_denominator)
   in
