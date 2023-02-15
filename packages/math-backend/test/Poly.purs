@@ -3,7 +3,7 @@ module Test.Poly  where
 import Prelude
 
 import Algebra.Integer (Integer(..))
-import Algebra.Polynomial (Polynomial(..))
+import Algebra.Polynomial (Polynomial(..), evaluate)
 import Effect (Effect)
 import Effect.Console (log)
 import Test.Assert (assert)
@@ -20,4 +20,5 @@ p3 = p1 + p2
 polyTests :: Effect Unit
 polyTests = do
   assert (p3 == Polynomial [Integer 3, Integer 5])
+  assert $ evaluate p1 (Integer 2) == Integer 24
   log "polyTests"

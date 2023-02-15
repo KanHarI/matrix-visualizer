@@ -1,7 +1,7 @@
 module Algebra.Polynomial where
 
 import Prelude
-import Data.Array (drop, index, length, take, zipWith)
+import Data.Array (drop, head, index, length, tail, take, zipWith)
 import Data.Maybe (Maybe(..))
 import Error (error)
 
@@ -53,6 +53,21 @@ reduce (Polynomial cs) =
       reduce (Polynomial (take last_index cs))
     else
       Polynomial cs
+
+evaluate :: forall a. Ring a => Polynomial a -> a -> a
+evaluate (Polynomial []) _ = zero
+
+evaluate (Polynomial cs) x =
+  let
+    first = case head cs of
+      Just c -> c
+      Nothing -> error "Impossible"
+
+    rest = case tail cs of
+      Just cs' -> Polynomial cs'
+      Nothing -> error "Impossible"
+  in
+    add first (mul x (evaluate rest x))
 
 instance semiringPolynomial :: (Ring a, Eq a) => Semiring (Polynomial a) where
   zero = Polynomial []
