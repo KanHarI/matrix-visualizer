@@ -12,7 +12,7 @@ import Rle (rle)
 firstFactorAfter :: Int -> Int -> Maybe Int
 firstFactorAfter n m =
   let
-    upperBound = ceil $ sqrt $ toNumber n
+    upperBound = if m == 2 then ceil $ sqrt $ toNumber n else n - 1
   in
     find (\x -> n `mod` x == 0) (range m upperBound)
 

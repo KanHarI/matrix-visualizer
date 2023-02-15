@@ -1,8 +1,8 @@
 module Algebra.UniqueFactorizationDomain where
 
 import Prelude
-import Algebra.MaybeInvertibleCommutativeRing (class MaybeInvertibleCommutativeRing)
-import Algebra.MaybeInvertibleRing (inv, pow)
+import Algebra.MyDivisionRing (class MyDivisionRing, _inv)
+import Algebra.Pow (pow)
 import Data.Foldable (foldl)
 import Data.HashMap (HashMap, filter, intersectionWith, toArrayBy, unionWith)
 import Data.Hashable (class Hashable)
@@ -11,10 +11,10 @@ import Data.Tuple (Tuple(..), fst, snd)
 import Error (error)
 
 class
-  (MaybeInvertibleCommutativeRing a, Hashable a) <= UniqueFactorizationDomain a where
+  (CommutativeRing a, Hashable a, MyDivisionRing a) <= UniqueFactorizationDomain a where
   factorize :: a -> Tuple (Maybe a) (HashMap a Int)
 
-defactorize :: forall a. UniqueFactorizationDomain a => Tuple (Maybe a) (HashMap a Int) -> a
+defactorize :: forall a. UniqueFactorizationDomain a => Show a => Tuple (Maybe a) (HashMap a Int) -> a
 defactorize (Tuple maybe_unit non_units) =
   let
     unital_element = case maybe_unit of
@@ -24,9 +24,9 @@ defactorize (Tuple maybe_unit non_units) =
     non_unit_factors :: HashMap a Int
     non_unit_factors = non_units
   in
-    foldl (*) unital_element (toArrayBy (\factor -> \exponent -> pow factor exponent) non_unit_factors)
+    foldl (*) unital_element (toArrayBy (\factor exponent -> pow factor exponent) non_unit_factors)
 
-gcd :: forall a. UniqueFactorizationDomain a => a -> a -> a
+gcd :: forall a. UniqueFactorizationDomain a => Show a => a -> a -> a
 gcd a b = defactorize (gcd' (factorize a) (factorize b))
   where
   gcd' :: Tuple (Maybe a) (HashMap a Int) -> Tuple (Maybe a) (HashMap a Int) -> Tuple (Maybe a) (HashMap a Int)
@@ -40,7 +40,7 @@ gcd a b = defactorize (gcd' (factorize a) (factorize b))
     in
       Tuple Nothing non_unit
 
-lcm :: forall a. UniqueFactorizationDomain a => a -> a -> a
+lcm :: forall a. UniqueFactorizationDomain a => Show a => a -> a -> a
 lcm a b = defactorize (lcm' (factorize a) (factorize b))
   where
   lcm' :: Tuple (Maybe a) (HashMap a Int) -> Tuple (Maybe a) (HashMap a Int) -> Tuple (Maybe a) (HashMap a Int)
@@ -54,7 +54,7 @@ lcm a b = defactorize (lcm' (factorize a) (factorize b))
     in
       Tuple Nothing non_unit
 
-reduceFraction :: forall a. UniqueFactorizationDomain a => Tuple a a -> Tuple a a
+reduceFraction :: forall a. UniqueFactorizationDomain a => Show a => Tuple a a -> Tuple a a
 reduceFraction fraction =
   let
     numerator = fst fraction
@@ -74,12 +74,12 @@ reduceFraction fraction =
     denominator_non_unit = snd denominator_factors
 
     denominator_unit_inverse = case denominator_unit of
-      Just x -> case inv x of
+      Just x -> case _inv x of
         Just y -> y
         Nothing -> error "reduceFraction: denominator_unit is not invertible"
       Nothing -> one
 
-    unit =
+    _unit =
       ( case numerator_unit of
           Nothing -> one
           Just y -> y
@@ -90,9 +90,9 @@ reduceFraction fraction =
 
     non_unit_numerator = filter (\x -> x > 0) non_unit_part
 
-    non_unit_denominator = filter (\x -> x < 0) non_unit_part
+    non_unit_denominator = map (\v -> (-v)) $ filter (\x -> x < 0) non_unit_part
 
-    new_numerator = unit * (defactorize (Tuple Nothing non_unit_numerator))
+    new_numerator = _unit * (defactorize (Tuple Nothing non_unit_numerator))
 
     new_denominator = defactorize (Tuple Nothing non_unit_denominator)
   in
