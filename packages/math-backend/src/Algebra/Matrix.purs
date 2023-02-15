@@ -4,6 +4,7 @@ import Prelude
 import Algebra.MyDivisionRing (class MyDivisionRing)
 import Algebra.Vector (Vector(..), dot)
 import Data.Array (index, transpose)
+import Data.Foldable (intercalate)
 import Data.Maybe (Maybe(..))
 import Data.Typelevel.Num (class Nat)
 import Data.Vec (Vec, fill, fromArray, toArray)
@@ -71,3 +72,30 @@ matmul m1 m2 =
         )
   in
     Matrix $ Vector $ map (\v -> Vector v) rows
+
+instance eqMatrix :: (Eq a, Nat srows, Nat scolumns) => Eq (Matrix srows scolumns a) where
+  eq (Matrix m1) (Matrix m2) = m1 == m2
+
+madd :: forall srows scolumns a. Nat srows => Nat scolumns => MyDivisionRing a => Matrix srows scolumns a -> Matrix srows scolumns a -> Matrix srows scolumns a
+madd (Matrix m1) (Matrix m2) = Matrix $ m1 + m2
+
+minitialize :: forall srows scolumns a. Nat srows => Nat scolumns => MyDivisionRing a => (Int -> Int -> a) -> Matrix srows scolumns a
+minitialize f =
+  let
+    rows :: Vec srows (Vec scolumns a)
+    rows =
+      fill
+        ( \i ->
+            fill
+              ( \j ->
+                  f i j
+              )
+        )
+  in
+    Matrix $ Vector $ map (\v -> Vector v) rows
+
+instance functorMatrix :: Functor (Matrix srows scolumns) where
+  map f (Matrix m) = Matrix $ map (map f) m
+
+mtoMathJax :: forall srows scolumns a. MyDivisionRing a => Nat srows => Nat scolumns => Matrix srows scolumns a -> String
+mtoMathJax (Matrix m) = "TBD"

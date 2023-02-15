@@ -13,7 +13,7 @@ data Vector :: Type -> Type -> Type
 data Vector s a
   = Vector (Vec s a)
 
-instance eqVector :: (Nat s, MyDivisionRing a, Eq a) => Eq (Vector s a) where
+instance eqVector :: (Nat s, Eq a) => Eq (Vector s a) where
   eq (Vector v1) (Vector v2) = v1 == v2
 
 instance showVector :: (Nat s, MyDivisionRing a) => Show (Vector s a) where
