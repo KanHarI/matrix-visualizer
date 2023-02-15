@@ -1,8 +1,10 @@
 module Algebra.Polynomial where
 
 import Prelude
-import Data.Array (drop, head, index, length, tail, take, zipWith)
+import Data.Array (drop, head, index, length, range, replicate, tail, take, zip, zipWith)
+import Data.Foldable (sum)
 import Data.Maybe (Maybe(..))
+import Data.Tuple (Tuple(..), fst, snd)
 import Error (error)
 
 data PolyDegree
@@ -69,6 +71,13 @@ evaluate (Polynomial cs) x =
   in
     add first (mul x (evaluate rest x))
 
+mul_monomial :: forall a. Ring a => Eq a => Polynomial a -> a -> Int -> Polynomial a
+mul_monomial (Polynomial cs) x n =
+  let
+    new_coefficients = replicate n zero <> map (mul x) cs
+  in
+    reduce $ Polynomial new_coefficients
+
 instance semiringPolynomial :: (Ring a, Eq a) => Semiring (Polynomial a) where
   zero = Polynomial []
   one = Polynomial [ one ]
@@ -81,4 +90,4 @@ instance semiringPolynomial :: (Ring a, Eq a) => Semiring (Polynomial a) where
       shared_part = zipWith add longer_poly shorter_poly
     in
       reduce $ Polynomial (shared_part <> drop (length shared_part) longer_poly)
-  mul (Polynomial cs) (Polynomial ds) = error "Not implemented yet"
+  mul (Polynomial cs) (Polynomial ds) = reduce $ sum $ map (\tpl -> mul_monomial (Polynomial cs) (fst tpl) (snd tpl)) $ zipWith (\coeff exp -> Tuple coeff exp) ds (range 0 (length ds - 1))

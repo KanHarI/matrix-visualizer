@@ -21,4 +21,5 @@ polyTests :: Effect Unit
 polyTests = do
   assert (p3 == Polynomial [Integer 3, Integer 5])
   assert $ evaluate p1 (Integer 2) == Integer 24
-  log "polyTests"
+  assert $ p1 * p2 == Polynomial [Integer 2, Integer 7, Integer 2, Integer (-4), Integer (-16)]
+  log "Polynomial tests passed"
