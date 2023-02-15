@@ -1,7 +1,7 @@
 module Algebra.Matrix where
 
 import Prelude
-import Algebra.MyDivisionRing (class MyDivisionRing)
+import Algebra.MyDivisionRing (class MyDivisionRing, toMathJax)
 import Algebra.Vector (Vector(..), dot)
 import Data.Array (index, transpose)
 import Data.Foldable (intercalate)
@@ -98,7 +98,14 @@ instance functorMatrix :: Functor (Matrix srows scolumns) where
   map f (Matrix m) = Matrix $ map (map f) m
 
 mtoMathJax :: forall srows scolumns a. MyDivisionRing a => Nat srows => Nat scolumns => Matrix srows scolumns a -> String
-mtoMathJax (Matrix m) = "TBD"
+mtoMathJax (Matrix (Vector v)) =
+  let
+    rows = map toMathJax v
+  in
+    "\\begin{bmatrix}" <> intercalate "\\\\" rows <> "\\end{bmatrix}"
 
 mindex :: forall srows scolumns a. Nat srows => Nat scolumns => MyDivisionRing a => Matrix srows scolumns a -> Int -> Int -> Maybe a
 mindex (Matrix (Vector m)) i j = index (toArray m) i >>= \(Vector v) -> index (toArray v) j
+
+instance showMatrix :: (MyDivisionRing a, Nat srows, Nat scolumns) => Show (Matrix srows scolumns a) where
+  show m = mtoMathJax m

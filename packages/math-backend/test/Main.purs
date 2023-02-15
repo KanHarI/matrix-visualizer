@@ -4,6 +4,7 @@ import Prelude
 
 import Effect (Effect)
 import Effect.Class.Console (log)
+import Test.Matrix (matTests)
 import Test.Poly (polyTests)
 import Test.Rational (rationalTests)
 import Test.Vector (vecTests)
@@ -15,3 +16,4 @@ main = do
   rationalTests
   polyTests
   vecTests
+  matTests
