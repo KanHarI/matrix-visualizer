@@ -25,8 +25,10 @@ to generate this file without the comments in this block.
   , "prelude"
   , "profunctor"
   , "quickcheck"
+  , "sized-vectors"
   , "sparse-polynomials"
   , "tuples"
+  , "typelevel"
   , "unordered-collections"
   ]
 , packages = ./packages.dhall

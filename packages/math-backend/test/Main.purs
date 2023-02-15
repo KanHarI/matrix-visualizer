@@ -6,6 +6,7 @@ import Effect (Effect)
 import Effect.Class.Console (log)
 import Test.Poly (polyTests)
 import Test.Rational (rationalTests)
+import Test.Vector (vecTests)
 
 main :: Effect Unit
 main = do
@@ -13,3 +14,4 @@ main = do
   log "You should add some tests."
   rationalTests
   polyTests
+  vecTests
