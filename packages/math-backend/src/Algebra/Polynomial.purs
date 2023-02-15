@@ -1,11 +1,9 @@
 module Algebra.Polynomial where
 
 import Prelude
-import Data.Array (drop, head, index, length, range, replicate, tail, take, zip, zipWith)
+import Data.Array (drop, head, index, length, range, replicate, tail, take, zipWith)
 import Data.Foldable (sum)
-import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..), fst, snd)
-import Error (error)
 import UnsafeFromMaybe (unsafeFromMaybe)
 
 data PolyDegree
