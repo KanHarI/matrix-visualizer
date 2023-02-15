@@ -1,6 +1,7 @@
 module Algebra.Matrix where
 
 import Prelude
+import Algebra.Module (class Module, mod_add, mod_neg, mod_zero, r_mul)
 import Algebra.MyDivisionRing (class MyDivisionRing, toMathJax)
 import Algebra.Vector (Vector(..), dot)
 import Data.Array (index, transpose)
@@ -99,3 +100,9 @@ mindex (Matrix (Vector m)) i j = index (toArray m) i >>= \(Vector v) -> index (t
 
 instance showMatrix :: (MyDivisionRing a, Nat srows, Nat scolumns) => Show (Matrix srows scolumns a) where
   show m = mtoMathJax m
+
+instance moduleMatrix :: (MyDivisionRing r, CommutativeRing r, Eq r, Nat srows, Nat scolumns) => Module r (Matrix srows scolumns r) where
+  r_mul r = map ((*) r)
+  mod_add = madd
+  mod_zero = minitialize (\_ _ -> zero)
+  mod_neg = map negate

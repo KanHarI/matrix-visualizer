@@ -2,6 +2,7 @@ module Algebra.SquareMatrix where
 
 import Prelude
 import Algebra.Matrix (Matrix(..), madd, matmul, mindex, minitialize, mtoMathJax)
+import Algebra.Module (class Module)
 import Algebra.MyDivisionRing (class MyDivisionRing)
 import Algebra.MyField (class MyField)
 import Algebra.Vector (Vector(..))
@@ -34,6 +35,9 @@ instance myDivisionRingSquareMatrix :: (MyDivisionRing a, Nat s) => MyDivisionRi
 
 instance showSquareMatrix :: (MyDivisionRing a, Nat s) => Show (SquareMatrix s a) where
   show (SquareMatrix m) = show m
+
+instance functorSquareMatrix :: Functor (SquareMatrix s) where
+  map f (SquareMatrix m) = SquareMatrix $ map f m
 
 minor :: forall s sp1 a. MyDivisionRing a => Nat s => Pos sp1 => Succ s sp1 => SquareMatrix sp1 a -> Int -> Int -> SquareMatrix s a
 minor (SquareMatrix m) i j =
@@ -97,3 +101,9 @@ else instance inductive :: (MyField a, Eq a, Pos s, Pos sn, Succ s sn, GaussianE
             , transformation: SquareMatrix $ minitialize (\i j -> if i == 0 || j == 0 then (if i == 0 && j == 0 then one else zero) else unsafeFromMaybe $ mindex transformation_rest_of_matrix (i - 1) (j - 1))
             , rank: remaining_elimination.rank
             }
+
+instance moduleSquareMatrix :: (MyDivisionRing r, CommutativeRing r, Eq r, Nat s) => Module r (SquareMatrix s r) where
+  r_mul r = map ((*) r)
+  mod_add = add
+  mod_zero = SquareMatrix $ minitialize (\_ _ -> zero)
+  mod_neg = map negate

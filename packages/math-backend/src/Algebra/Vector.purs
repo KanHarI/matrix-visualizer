@@ -1,6 +1,7 @@
 module Algebra.Vector where
 
 import Prelude
+import Algebra.Module (class Module, mod_add, r_mul)
 import Algebra.MyDivisionRing (class MyDivisionRing, _inv, toMathJax)
 import Data.Array (foldl, index)
 import Data.Foldable (sum)
@@ -51,3 +52,9 @@ instance myDivisionRingVector :: (Nat s, MyDivisionRing a) => MyDivisionRing (Ve
         Nothing
 
 instance commutativeRingVector :: (Nat s, MyDivisionRing a) => CommutativeRing (Vector s a)
+
+instance moduleVector :: (Nat s, MyDivisionRing r, CommutativeRing r) => Module r (Vector s r) where
+  r_mul s (Vector v) = Vector $ map ((*) s) v
+  mod_add v1 v2 = v1 + v2
+  mod_zero = zero
+  mod_neg = negate

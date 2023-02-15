@@ -1,6 +1,8 @@
 module Algebra.Polynomial where
 
 import Prelude
+import Algebra.Module (class Module)
+import Algebra.MyDivisionRing (class MyDivisionRing)
 import Data.Array (drop, head, index, length, range, replicate, tail, take, zipWith)
 import Data.Foldable (sum)
 import Data.Tuple (Tuple(..), fst, snd)
@@ -84,3 +86,15 @@ instance semiringPolynomial :: (Ring a, Eq a) => Semiring (Polynomial a) where
     in
       reduce $ Polynomial (shared_part <> drop (length shared_part) longer_poly)
   mul (Polynomial cs) (Polynomial ds) = reduce $ sum $ map (\tpl -> mul_monomial (Polynomial cs) (fst tpl) (snd tpl)) $ zipWith (\coeff exp -> Tuple coeff exp) ds (range 0 (length ds - 1))
+
+instance functorPolynomial :: Functor Polynomial where
+  map f (Polynomial cs) = Polynomial $ map f cs
+
+instance ringPolynomial :: (Ring a, Eq a) => Ring (Polynomial a) where
+  sub p1 p2 = add p1 (map negate p2)
+
+instance modulePolynomial :: (MyDivisionRing r, CommutativeRing r, Eq r) => Module r (Polynomial r) where
+  r_mul r (Polynomial cs) = Polynomial $ map ((*) r) cs
+  mod_add p1 p2 = p1 + p2
+  mod_zero = zero
+  mod_neg = negate
