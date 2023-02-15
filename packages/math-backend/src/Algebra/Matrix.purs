@@ -99,3 +99,6 @@ instance functorMatrix :: Functor (Matrix srows scolumns) where
 
 mtoMathJax :: forall srows scolumns a. MyDivisionRing a => Nat srows => Nat scolumns => Matrix srows scolumns a -> String
 mtoMathJax (Matrix m) = "TBD"
+
+mindex :: forall srows scolumns a. Nat srows => Nat scolumns => MyDivisionRing a => Matrix srows scolumns a -> Int -> Int -> Maybe a
+mindex (Matrix (Vector m)) i j = index (toArray m) i >>= \(Vector v) -> index (toArray v) j
