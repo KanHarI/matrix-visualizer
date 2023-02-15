@@ -5,10 +5,10 @@ import Algebra.MyDivisionRing (class MyDivisionRing, toMathJax)
 import Algebra.Vector (Vector(..), dot)
 import Data.Array (index, transpose)
 import Data.Foldable (intercalate)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe)
 import Data.Typelevel.Num (class Nat)
 import Data.Vec (Vec, fill, fromArray, toArray)
-import Error (error)
+import UnsafeFromMaybe (unsafeFromMaybe)
 
 data Matrix :: Type -> Type -> Type -> Type
 data Matrix srows scolumns a
@@ -29,18 +29,12 @@ transpose_m (Matrix (Vector vec_rows)) =
     array_column_vecs =
       map
         ( \a ->
-            Vector
-              ( case (fromArray a) of
-                  Just x -> x
-                  Nothing -> error "Error transposing"
-              )
+            Vector $ unsafeFromMaybe $ fromArray a
         )
         array_columns
 
     vec_columns :: Vector scolumns (Vector srows a)
-    vec_columns = case fromArray array_column_vecs of
-      Just x -> Vector x
-      Nothing -> error "Error transposing"
+    vec_columns = Vector $ unsafeFromMaybe $ fromArray array_column_vecs
   in
     Matrix vec_columns
 
@@ -56,16 +50,12 @@ matmul m1 m2 =
       fill
         ( \i ->
             let
-              row = case index (toArray vec_rows1) i of
-                Just x -> x
-                Nothing -> error "Error multiplying"
+              row = unsafeFromMaybe $ index (toArray vec_rows1) i
             in
               fill
                 ( \j ->
                     let
-                      column = case index (toArray vec_columns2) j of
-                        Just x -> x
-                        Nothing -> error "Error multiplying"
+                      column = unsafeFromMaybe $ index (toArray vec_columns2) j
                     in
                       dot row column
                 )

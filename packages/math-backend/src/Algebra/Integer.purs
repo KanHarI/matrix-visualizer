@@ -9,8 +9,8 @@ import Data.Int (fromNumber, toNumber)
 import Data.Maybe (Maybe(..))
 import Data.Number (abs)
 import Data.Tuple (Tuple(..))
-import Error (error)
 import NumberTheory (primeFactorsWithMultiplicity)
+import UnsafeFromMaybe (unsafeFromMaybe)
 
 data Integer
   = Integer Int
@@ -44,9 +44,7 @@ instance uniqueFactorizationDomainInteger :: UniqueFactorizationDomain Integer w
     let
       _unit = if n < 0 then Just (Integer (-1)) else Nothing
 
-      abs_n = case fromNumber $ abs $ toNumber n of
-        Just n' -> n'
-        Nothing -> error "Error factoring integer"
+      abs_n = unsafeFromMaybe $ fromNumber $ abs $ toNumber n
 
       factors = primeFactorsWithMultiplicity abs_n
     in

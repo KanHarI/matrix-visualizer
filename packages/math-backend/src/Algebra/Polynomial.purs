@@ -6,6 +6,7 @@ import Data.Foldable (sum)
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..), fst, snd)
 import Error (error)
+import UnsafeFromMaybe (unsafeFromMaybe)
 
 data PolyDegree
   = Degree Int
@@ -47,9 +48,7 @@ reduce (Polynomial cs) =
   let
     last_index = length cs - 1
 
-    is_last_zero = case index cs last_index of
-      Just x -> x == zero
-      Nothing -> error "Impossible"
+    is_last_zero = (unsafeFromMaybe $ index cs last_index) == zero
   in
     if is_last_zero then
       reduce (Polynomial (take last_index cs))
@@ -61,13 +60,9 @@ evaluate (Polynomial []) _ = zero
 
 evaluate (Polynomial cs) x =
   let
-    first = case head cs of
-      Just c -> c
-      Nothing -> error "Impossible"
+    first = unsafeFromMaybe $ head cs
 
-    rest = case tail cs of
-      Just cs' -> Polynomial cs'
-      Nothing -> error "Impossible"
+    rest = Polynomial $ unsafeFromMaybe $ tail cs
   in
     add first (mul x (evaluate rest x))
 

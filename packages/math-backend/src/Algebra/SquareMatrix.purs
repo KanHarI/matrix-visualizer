@@ -7,12 +7,13 @@ import Algebra.MyField (class MyField)
 import Algebra.Vector (Vector(..))
 import Data.Array (findIndex, index, range, zipWith)
 import Data.Foldable (sum)
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Data.Typelevel.Num (class Nat, class Pos, class Succ, D1, toInt)
 import Data.Typelevel.Undefined (undefined)
 import Data.Vec (toArray)
 import Error (error)
+import UnsafeFromMaybe (unsafeFromMaybe)
 
 newtype SquareMatrix :: Type -> Type -> Type
 newtype SquareMatrix s a
@@ -43,29 +44,21 @@ minor (SquareMatrix m) i j =
               read_i = if k < i then k else k + 1
 
               read_j = if l < j then l else l + 1
-
-              matrix_entry = case mindex m read_i read_j of
-                Just x -> x
-                Nothing -> error "Matrix index out of bounds"
             in
-              matrix_entry
+              unsafeFromMaybe $ mindex m read_i read_j
         )
 
 class Determinantable m a where
   det :: m -> a
 
 instance orderOneDeterminantable :: (MyDivisionRing a) => Determinantable (SquareMatrix D1 a) a where
-  det (SquareMatrix m) = case mindex m 0 0 of
-    Just x -> x
-    Nothing -> error "Matrix index out of bounds"
+  det (SquareMatrix m) = unsafeFromMaybe $ mindex m 0 0
 else instance induciveDeterminantable :: (MyDivisionRing a, Pos s, Pos sn, Succ s sn, Determinantable (SquareMatrix s a) a) => Determinantable (SquareMatrix sn a) a where
   det (SquareMatrix m) =
     let
       Matrix (Vector rows) = m
 
-      first_row = case index (toArray rows) 0 of
-        Just (Vector x) -> x
-        Nothing -> error "Matrix index out of bounds"
+      (Vector first_row) = unsafeFromMaybe $ index (toArray rows) 0
 
       minors_and_idx = map (\i -> Tuple (det (minor (SquareMatrix m) 0 i)) (if i `mod` 2 == 0 then one else (negate one))) (range 0 (toInt (undefined :: s) - 1))
     in
@@ -77,9 +70,7 @@ class GaussianEliminatable m where
 instance orderOneGaussianElimination :: (MyField a, Eq a) => GaussianEliminatable (SquareMatrix D1 a) where
   gaussianElimination (SquareMatrix m) =
     let
-      v = case mindex m 0 0 of
-        Just x -> x
-        Nothing -> error "Matrix index out of bounds"
+      v = unsafeFromMaybe $ mindex m 0 0
     in
       { eliminated: SquareMatrix m, transformation: SquareMatrix $ minitialize (\_ _ -> one), rank: if v == zero then 0 else 1 }
 else instance inductive :: (MyField a, Eq a, Pos s, Pos sn, Succ s sn, GaussianEliminatable (SquareMatrix s a)) => GaussianEliminatable (SquareMatrix sn a) where
@@ -87,10 +78,7 @@ else instance inductive :: (MyField a, Eq a, Pos s, Pos sn, Succ s sn, GaussianE
     let
       pivot =
         findIndex
-          ( \i -> case mindex m i 0 of
-              Just x -> x /= zero
-              Nothing -> error "Matrix index out of bounds"
-          )
+          (\i -> (unsafeFromMaybe $ mindex m i 0) /= zero)
           $ range 0 (toInt (undefined :: s) - 1)
     in
       case pivot of
@@ -105,7 +93,7 @@ else instance inductive :: (MyField a, Eq a, Pos s, Pos sn, Succ s sn, GaussianE
 
             transformation_rest_of_matrix = (\(SquareMatrix m) -> m) remaining_elimination.transformation
           in
-            { eliminated: SquareMatrix $ minitialize (\i j -> if i == 0 || j == 0 then fromMaybe zero $ mindex m i j else fromMaybe zero $ mindex eliminated_rest_of_matrix (i - 1) (j - 1))
-            , transformation: SquareMatrix $ minitialize (\i j -> if i == 0 || j == 0 then (if i == 0 && j == 0 then one else zero) else fromMaybe zero $ mindex transformation_rest_of_matrix (i - 1) (j - 1))
+            { eliminated: SquareMatrix $ minitialize (\i j -> if i == 0 || j == 0 then unsafeFromMaybe $ mindex m i j else unsafeFromMaybe $ mindex eliminated_rest_of_matrix (i - 1) (j - 1))
+            , transformation: SquareMatrix $ minitialize (\i j -> if i == 0 || j == 0 then (if i == 0 && j == 0 then one else zero) else unsafeFromMaybe $ mindex transformation_rest_of_matrix (i - 1) (j - 1))
             , rank: remaining_elimination.rank
             }

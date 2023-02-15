@@ -7,7 +7,7 @@ import Data.Foldable (sum)
 import Data.Maybe (Maybe(..), isJust)
 import Data.Typelevel.Num (class Nat)
 import Data.Vec (Vec, fill, toArray, zipWithE)
-import Error (error)
+import UnsafeFromMaybe (unsafeFromMaybe)
 
 data Vector :: Type -> Type -> Type
 data Vector s a
@@ -46,11 +46,7 @@ instance myDivisionRingVector :: (Nat s, MyDivisionRing a) => MyDivisionRing (Ve
         Just
           $ Vector
           $ fill
-              ( \i -> case (index element_inverses i) of
-                  Just (Just x) -> x
-                  Just Nothing -> error "Error"
-                  Nothing -> error "Error"
-              )
+              (\i -> unsafeFromMaybe $ unsafeFromMaybe $ index element_inverses i)
       else
         Nothing
 

@@ -8,7 +8,7 @@ import Data.HashMap (HashMap, filter, intersectionWith, toArrayBy, unionWith)
 import Data.Hashable (class Hashable)
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..), fst, snd)
-import Error (error)
+import UnsafeFromMaybe (unsafeFromMaybe)
 
 class
   (CommutativeRing a, Hashable a, MyDivisionRing a) <= UniqueFactorizationDomain a where
@@ -74,9 +74,7 @@ reduceFraction fraction =
     denominator_non_unit = snd denominator_factors
 
     denominator_unit_inverse = case denominator_unit of
-      Just x -> case _inv x of
-        Just y -> y
-        Nothing -> error "reduceFraction: denominator_unit is not invertible"
+      Just x -> unsafeFromMaybe $ _inv x
       Nothing -> one
 
     _unit =
