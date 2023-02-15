@@ -4,12 +4,10 @@ import Prelude
 
 import Algebra.Integer (Integer(..))
 import Algebra.Matrix (Matrix, minitialize)
-import Algebra.MyDivisionRing (toMathJax)
 import Algebra.SquareMatrix (SquareMatrix(..), det, minor)
 import Data.Typelevel.Num (D1, D2)
 import Effect (Effect)
 import Effect.Console (log)
-import Test.Assert (assert)
 
 m1 :: Matrix D2 D2 Integer
 m1 = minitialize (\i j -> Integer $ i + j)
