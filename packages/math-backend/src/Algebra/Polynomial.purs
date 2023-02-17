@@ -2,9 +2,10 @@ module Algebra.Polynomial where
 
 import Prelude
 import Algebra.Module (class Module)
-import Algebra.MyDivisionRing (class MyDivisionRing)
-import Data.Array (drop, head, index, length, range, replicate, tail, take, zipWith)
+import Algebra.MyDivisionRing (class MyDivisionRing, _inv, toMathJax)
+import Data.Array (drop, foldl, head, index, length, range, replicate, tail, take, zipWith)
 import Data.Foldable (sum)
+import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..), fst, snd)
 import UnsafeFromMaybe (unsafeFromMaybe)
 
@@ -73,6 +74,13 @@ mul_monomial (Polynomial cs) x n =
   in
     reduce $ Polynomial new_coefficients
 
+monomial_to_mathjax :: forall a. MyDivisionRing a => a -> Int -> String
+monomial_to_mathjax c 0 = toMathJax c
+
+monomial_to_mathjax c 1 = "(" <> toMathJax c <> ")x"
+
+monomial_to_mathjax c n = "(" <> toMathJax c <> ")x^" <> show n
+
 instance semiringPolynomial :: (Ring a, Eq a) => Semiring (Polynomial a) where
   zero = Polynomial []
   one = Polynomial [ one ]
@@ -98,3 +106,19 @@ instance modulePolynomial :: (MyDivisionRing r, CommutativeRing r, Eq r) => Modu
   mod_add p1 p2 = p1 + p2
   mod_zero = zero
   mod_neg = negate
+
+instance myDivisionRingPolynomial :: (MyDivisionRing r, CommutativeRing r, Eq r) => MyDivisionRing (Polynomial r) where
+  toMathJax (Polynomial cs) = case deg (Polynomial cs) of
+    NegInf -> "0"
+    Degree 0 -> toMathJax (unsafeFromMaybe $ head cs)
+    Degree n ->
+      let
+        parts = map (\i -> monomial_to_mathjax (unsafeFromMaybe $ index cs i) i) (range 0 n)
+      in
+        foldl (\acc part -> acc <> " + " <> part) "" parts
+  _inv (Polynomial cs) =
+    if deg (Polynomial cs) == Degree 0 then case _inv (unsafeFromMaybe $ head cs) of
+      Just inverse_element -> Just $ Polynomial [ inverse_element ]
+      Nothing -> Nothing
+    else
+      Nothing

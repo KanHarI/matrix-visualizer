@@ -5,6 +5,7 @@ import Algebra.Matrix (Matrix(..), madd, matmul, mindex, minitialize, mtoMathJax
 import Algebra.Module (class Module)
 import Algebra.MyDivisionRing (class MyDivisionRing)
 import Algebra.MyField (class MyField)
+import Algebra.Polynomial (Polynomial(..), reduce)
 import Algebra.Vector (Vector(..))
 import Data.Array (findIndex, index, range, zipWith)
 import Data.Foldable (sum)
@@ -107,3 +108,15 @@ instance moduleSquareMatrix :: (MyDivisionRing r, CommutativeRing r, Eq r, Nat s
   mod_add = add
   mod_zero = SquareMatrix $ minitialize (\_ _ -> zero)
   mod_neg = map negate
+
+charPoly :: forall s r. MyDivisionRing r => CommutativeRing r => Eq r => Nat s => Determinantable (SquareMatrix s (Polynomial r)) (Polynomial r) => SquareMatrix s r -> Polynomial r
+charPoly m =
+  let
+    const_poly_matrix = map (\i -> reduce $ Polynomial [ i ]) m
+
+    diagonal_poly_matrix :: SquareMatrix s (Polynomial r)
+    diagonal_poly_matrix = SquareMatrix $ minitialize (\i j -> if i == j then Polynomial [ zero, one ] else zero)
+
+    determinantal_matrix = const_poly_matrix - diagonal_poly_matrix
+  in
+    det determinantal_matrix
