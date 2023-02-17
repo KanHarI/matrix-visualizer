@@ -4,7 +4,7 @@ import Prelude
 import Algebra.Module (class Module, mod_add, mod_neg, mod_zero, r_mul)
 import Algebra.MyDivisionRing (class MyDivisionRing, toMathJax)
 import Algebra.Vector (Vector(..), dot)
-import Data.Array (index, transpose)
+import Data.Array (index, length, range, transpose)
 import Data.Foldable (intercalate)
 import Data.Maybe (Maybe)
 import Data.Typelevel.Num (class Nat)
@@ -15,8 +15,8 @@ data Matrix :: Type -> Type -> Type -> Type
 data Matrix srows scolumns a
   = Matrix (Vector srows (Vector scolumns a))
 
-transpose_m :: forall srows scolumns a. Nat srows => Nat scolumns => Matrix srows scolumns a -> Matrix scolumns srows a
-transpose_m (Matrix (Vector vec_rows)) =
+mTranspose :: forall srows scolumns a. Nat srows => Nat scolumns => Matrix srows scolumns a -> Matrix scolumns srows a
+mTranspose (Matrix (Vector vec_rows)) =
   let
     array_vec_rows :: Array (Vector scolumns a)
     array_vec_rows = toArray vec_rows
@@ -39,12 +39,12 @@ transpose_m (Matrix (Vector vec_rows)) =
   in
     Matrix vec_columns
 
-matmul :: forall sm sn sp a. Nat sm => Nat sn => Nat sp => MyDivisionRing a => Matrix sm sn a -> Matrix sn sp a -> Matrix sm sp a
-matmul m1 m2 =
+mMul :: forall sm sn sp a. Nat sm => Nat sn => Nat sp => MyDivisionRing a => Matrix sm sn a -> Matrix sn sp a -> Matrix sm sp a
+mMul m1 m2 =
   let
     Matrix (Vector vec_rows1) = m1
 
-    Matrix (Vector vec_columns2) = transpose_m m2
+    Matrix (Vector vec_columns2) = mTranspose m2
 
     rows :: Vec sm (Vec sp a)
     rows =
@@ -67,11 +67,11 @@ matmul m1 m2 =
 instance eqMatrix :: (Eq a, Nat srows, Nat scolumns) => Eq (Matrix srows scolumns a) where
   eq (Matrix m1) (Matrix m2) = m1 == m2
 
-madd :: forall srows scolumns a. Nat srows => Nat scolumns => MyDivisionRing a => Matrix srows scolumns a -> Matrix srows scolumns a -> Matrix srows scolumns a
-madd (Matrix m1) (Matrix m2) = Matrix $ m1 + m2
+mAdd :: forall srows scolumns a. Nat srows => Nat scolumns => MyDivisionRing a => Matrix srows scolumns a -> Matrix srows scolumns a -> Matrix srows scolumns a
+mAdd (Matrix m1) (Matrix m2) = Matrix $ m1 + m2
 
-minitialize :: forall srows scolumns a. Nat srows => Nat scolumns => MyDivisionRing a => (Int -> Int -> a) -> Matrix srows scolumns a
-minitialize f =
+mInitialize :: forall srows scolumns a. Nat srows => Nat scolumns => MyDivisionRing a => (Int -> Int -> a) -> Matrix srows scolumns a
+mInitialize f =
   let
     rows :: Vec srows (Vec scolumns a)
     rows =
@@ -95,14 +95,27 @@ mtoMathJax (Matrix (Vector v)) =
   in
     "\\begin{bmatrix}" <> intercalate "\\\\" rows <> "\\end{bmatrix}"
 
-mindex :: forall srows scolumns a. Nat srows => Nat scolumns => MyDivisionRing a => Matrix srows scolumns a -> Int -> Int -> Maybe a
-mindex (Matrix (Vector m)) i j = index (toArray m) i >>= \(Vector v) -> index (toArray v) j
+mIndex :: forall srows scolumns a. Nat srows => Nat scolumns => MyDivisionRing a => Matrix srows scolumns a -> Int -> Int -> Maybe a
+mIndex (Matrix (Vector m)) i j = index (toArray m) i >>= \(Vector v) -> index (toArray v) j
 
 instance showMatrix :: (MyDivisionRing a, Nat srows, Nat scolumns) => Show (Matrix srows scolumns a) where
   show m = mtoMathJax m
 
 instance moduleMatrix :: (MyDivisionRing r, CommutativeRing r, Eq r, Nat srows, Nat scolumns) => Module r (Matrix srows scolumns r) where
   r_mul r = map ((*) r)
-  mod_add = madd
-  mod_zero = minitialize (\_ _ -> zero)
+  mod_add = mAdd
+  mod_zero = mInitialize (\_ _ -> zero)
   mod_neg = map negate
+
+mSwapRows :: forall srows scolumns a. Nat srows => Nat scolumns => MyDivisionRing a => Matrix srows scolumns a -> Int -> Int -> Matrix srows scolumns a
+mSwapRows (Matrix (Vector v)) i j =
+  let
+    array = toArray v
+
+    indices_order = map (\k -> if k == i then j else if k == j then i else k) (range 0 $ length array - 1)
+
+    array' = map (\k -> unsafeFromMaybe $ index array k) indices_order
+
+    v' = unsafeFromMaybe $ fromArray array'
+  in
+    Matrix $ Vector v'
