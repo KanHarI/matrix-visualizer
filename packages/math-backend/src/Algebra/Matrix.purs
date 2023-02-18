@@ -1,7 +1,7 @@
 module Algebra.Matrix where
 
 import Prelude
-import Algebra.Module (class Module, mod_add, mod_neg, mod_zero, r_mul)
+import Algebra.Module (class Module, mod_add, r_mul)
 import Algebra.MyDivisionRing (class MyDivisionRing, toMathJax)
 import Algebra.Vector (Vector(..), dot)
 import Data.Array (index, length, range, transpose)
@@ -9,6 +9,7 @@ import Data.Foldable (intercalate)
 import Data.Maybe (Maybe)
 import Data.Typelevel.Num (class Nat)
 import Data.Vec (Vec, fill, fromArray, toArray)
+import Error (error)
 import UnsafeFromMaybe (unsafeFromMaybe)
 
 data Matrix :: Type -> Type -> Type -> Type
@@ -119,3 +120,28 @@ mSwapRows (Matrix (Vector v)) i j =
     v' = unsafeFromMaybe $ fromArray array'
   in
     Matrix $ Vector v'
+
+mAddMultiplyRows :: forall srows scolumns a. Nat srows => Nat scolumns => MyDivisionRing a => CommutativeRing a => Matrix srows scolumns a -> Int -> Int -> a -> Matrix srows scolumns a
+mAddMultiplyRows (Matrix (Vector v)) i j r =
+  let
+    array = toArray v
+
+    array' = map (\k -> if k == i then mod_add (unsafeFromMaybe $ index array i) (r_mul r $ unsafeFromMaybe (index array j)) else unsafeFromMaybe $ index array k) (range 0 $ length array - 1)
+
+    v' = unsafeFromMaybe $ fromArray array'
+  in
+    Matrix $ Vector v'
+
+gaussianElimination :: forall srows scolumns a. Nat srows => Nat scolumns => MyDivisionRing a => CommutativeRing a => Matrix srows scolumns a -> { eliminated :: Matrix srows scolumns a, transform :: Matrix srows srows a, rank :: Int }
+gaussianElimination m =
+  let
+    identity_matrix :: Matrix srows srows a
+    identity_matrix = mInitialize (\i j -> if i == j then one else zero)
+
+    initial_rank = 0
+
+    start_column = 0
+  in
+    gaussianElimination' m identity_matrix initial_rank start_column
+  where
+  gaussianElimination' = error "TODO"
